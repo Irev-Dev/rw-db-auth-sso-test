@@ -13,6 +13,7 @@
     ]
   },
   "dependencies": {
+    "@redwoodjs/auth": "^0.39.3",
     "@redwoodjs/forms": "^0.39.4-canary.21",
     "@redwoodjs/router": "^0.39.4-canary.21",
     "@redwoodjs/web": "^0.39.4-canary.21",
