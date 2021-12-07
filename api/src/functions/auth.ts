@@ -1,5 +1,6 @@
 import { db } from 'src/lib/db'
 import { DbAuthHandler } from '@redwoodjs/api'
+import axios from 'axios'
 
 export const handler = async (event, context) => {
   const forgotPasswordOptions = {
@@ -44,6 +45,47 @@ export const handler = async (event, context) => {
     // didn't validate their email yet), throw an error and it will be returned
     // by the `logIn()` function from `useAuth()` in the form of:
     // `{ message: 'Error message' }`
+    ssoHandler: async (params) => {
+      const { code } = params
+      const { data } = await axios.post<{
+        access_token: string
+        scope: string
+        token_type: 'bearer'
+      }>(
+        [
+          `https://github.com/login/oauth/access_token?`,
+          `client_id=${process.env.GITHUB_SSO_ID}`,
+          `&client_secret=${process.env.GITHUB_SSO_SECRET}`,
+          `&code=${code}`,
+          `&redirect_uri=http://localhost:8910/github-auth`,
+        ].join(''),
+        {},
+        {
+          headers: {
+            accept: 'application/json',
+          },
+        }
+      )
+      const { data: emails } = await axios.get<
+        {
+          email: string
+          primary: boolean
+          verified: boolean
+          visibility: string | null
+        }[]
+      >([`https://api.github.com/user/emails`].join(''), {
+        headers: {
+          accept: 'application/json',
+          Authorization: `${data.token_type} ${data.access_token}`,
+        },
+      })
+      const primaryEmail = emails.find(({ primary }) => primary).email
+      return {
+        username: primaryEmail,
+        accessToken: data.access_token,
+        provider: 'github',
+      }
+    },
     handler: (user) => {
       return user
     },
@@ -101,13 +143,29 @@ export const handler = async (event, context) => {
     //
     // If this returns anything else, it will be returned by the
     // `signUp()` function in the form of: `{ message: 'String here' }`.
-    handler: ({ username, hashedPassword, salt, userAttributes }) => {
+    handler: ({
+      username,
+      hashedPassword,
+      salt,
+      ssoDetails,
+      userAttributes,
+    }) => {
+      if (ssoDetails) {
+        return db.userExample.create({
+          data: {
+            email: username,
+            accessToken: ssoDetails.accessToken,
+            provider: ssoDetails.provider,
+            // name: userAttributes.name,
+          },
+        })
+      }
       return db.userExample.create({
         data: {
           email: username,
           hashedPassword: hashedPassword,
           salt: salt,
-          // name: userAttributes.name
+          // name: userAttributes.name,
         },
       })
     },
@@ -137,6 +195,8 @@ export const handler = async (event, context) => {
       salt: 'salt',
       resetToken: 'resetToken',
       resetTokenExpiresAt: 'resetTokenExpiresAt',
+      provider: 'provider',
+      accessToken: 'accessToken',
     },
 
     forgotPassword: forgotPasswordOptions,

@@ -15,10 +15,12 @@ model UserExample {
   id                  Int       @id @default(autoincrement())
   email               String    @unique
   name                String?
-  hashedPassword      String // <─┐
-  salt                String // <─┼─ add these lines
+  hashedPassword      String    @default("") // <─┐
+  salt                String    @default("") // <─┼─ add these lines
   resetToken          String? // <─┤
   resetTokenExpiresAt DateTime? // <─┘
+  accessToken         String?
+  provider            String?
 }
 
 model Post {

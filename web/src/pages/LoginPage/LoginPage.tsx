@@ -38,6 +38,13 @@ const LoginPage = () => {
       toast.success('Welcome back!')
     }
   }
+  const githubLink = [
+    'https://github.com/login/oauth/authorize?',
+    `client_id=${process.env.GITHUB_SSO_ID}`,
+    '&redirect_uri=http://localhost:8910/github-auth',
+    '&scope=public_repo user',
+    '&allow_signup=false',
+  ].join('')
 
   return (
     <>
@@ -97,7 +104,10 @@ const LoginPage = () => {
                   />
 
                   <div className="rw-forgot-link">
-                    <Link to={routes.forgotPassword()} className="rw-forgot-link">
+                    <Link
+                      to={routes.forgotPassword()}
+                      className="rw-forgot-link"
+                    >
                       Forgot Password?
                     </Link>
                   </div>
@@ -108,6 +118,7 @@ const LoginPage = () => {
                     <Submit className="rw-button rw-button-blue">Login</Submit>
                   </div>
                 </Form>
+                <a href={githubLink}>Sign-in with Github</a>
               </div>
             </div>
           </div>

@@ -15,6 +15,7 @@ import BlogLayout from "src/layouts/BlogLayout";
 const Routes = () => {
   return (
     (<Router>
+      <Route path="/github-auth" page={GithubAuthPage} name="githubAuth" />
       <Route path="/login" page={LoginPage} name="login" />
       <Route path="/signup" page={SignupPage} name="signup" />
       <Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />
